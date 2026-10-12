@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f1e8">
+    <title>Simon Says</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #252a2b;
+            --muted: #65706e;
+            --paper: #f4f1e8;
+            --surface: #fffdf7;
+            --line: #d8d6ca;
+            --coral: #df604d;
+            --gold: #e8b934;
+            --teal: #288d79;
+            --blue: #386cbd;
+            --focus: #222;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            padding: clamp(20px, 5vw, 64px);
+            color: var(--ink);
+            background-color: var(--paper);
+            background-image: linear-gradient(rgba(37, 42, 43, 0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37, 42, 43, 0.035) 1px, transparent 1px);
+            background-size: 28px 28px;
+            font-family: "Avenir Next", Avenir, "Trebuchet MS", sans-serif;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .app {
+            width: min(100%, 980px);
+            margin: 0 auto;
+        }
+
+        .masthead {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 24px;
+            padding-bottom: 22px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--teal);
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2.4rem, 7vw, 4.5rem);
+            font-weight: 500;
+            line-height: 0.98;
+        }
+
+        .rounds {
+            display: flex;
+            flex: 0 0 auto;
+            gap: 24px;
+            padding-bottom: 4px;
+        }
+
+        .score {
+            min-width: 66px;
+            text-align: right;
+        }
+
+        .score-label {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 750;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .score-value {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 2rem;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 240px;
+            align-items: center;
+            gap: clamp(32px, 6vw, 68px);
+            padding-top: clamp(28px, 5vw, 52px);
+        }
+
+        .board {
+            display: grid;
+            width: min(100%, 560px);
+            aspect-ratio: 1;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: clamp(10px, 2vw, 16px);
+            justify-self: center;
+        }
+
+        .pad {
+            display: grid;
+            min-width: 0;
+            place-content: center;
+            gap: 8px;
+            border: 3px solid rgba(37, 42, 43, 0.12);
+            border-radius: 22px;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(37, 42, 43, 0.13);
+            transition: filter 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .pad[data-pad="0"] { background: var(--coral); }
+        .pad[data-pad="1"] { background: var(--gold); color: #3d331b; }
+        .pad[data-pad="2"] { background: var(--teal); }
+        .pad[data-pad="3"] { background: var(--blue); }
+
+        .pad:focus-visible,
+        .action:focus-visible {
+            outline: 4px solid var(--focus);
+            outline-offset: 4px;
+        }
+
+        .pad:active,
+        .pad.is-lit {
+            filter: brightness(1.22) saturate(0.82);
+            transform: translateY(3px) scale(0.985);
+            box-shadow: 0 2px 0 rgba(37, 42, 43, 0.13);
+        }
+
+        .pad[aria-disabled="true"] {
+            cursor: default;
+        }
+
+        .pad-name {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(1.3rem, 3.5vw, 2.15rem);
+            line-height: 1;
+        }
+
+        kbd {
+            justify-self: center;
+            min-width: 27px;
+            padding: 3px 7px;
+            border: 1px solid currentColor;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.16);
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .side-panel {
+            align-self: stretch;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            border-left: 1px solid var(--line);
+            padding-left: clamp(22px, 4vw, 38px);
+        }
+
+        .status {
+            min-height: 3.2em;
+            margin: 0 0 24px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1.55rem;
+            line-height: 1.2;
+        }
+
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .action {
+            min-height: 46px;
+            padding: 0 16px;
+            border: 1px solid var(--ink);
+            border-radius: 6px;
+            background: var(--ink);
+            color: #fffdf7;
+            cursor: pointer;
+            font-size: 0.92rem;
+            font-weight: 750;
+            transition: background-color 140ms ease, color 140ms ease;
+        }
+
+        .action:hover {
+            background: var(--teal);
+            border-color: var(--teal);
+        }
+
+        .action.secondary {
+            background: transparent;
+            color: var(--ink);
+        }
+
+        .action.secondary:hover {
+            background: var(--surface);
+            border-color: var(--teal);
+            color: var(--teal);
+        }
+
+        .hint {
+            margin: 22px 0 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .board.is-wrong {
+            animation: wrong-answer 260ms ease-in-out 2;
+        }
+
+        @keyframes wrong-answer {
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 680px) {
+            body {
+                padding: 24px 18px 32px;
+            }
+
+            .masthead {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .rounds {
+                width: 100%;
+                justify-content: flex-start;
+                gap: 30px;
+            }
+
+            .score {
+                text-align: left;
+            }
+
+            .game-layout {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 28px;
+                padding-top: 26px;
+            }
+
+            .board {
+                width: min(100%, 480px);
+            }
+
+            .side-panel {
+                align-items: stretch;
+                border-top: 1px solid var(--line);
+                border-left: 0;
+                padding: 22px 0 0;
+            }
+
+            .status {
+                min-height: 0;
+                margin-bottom: 16px;
+            }
+
+            .hint {
+                margin-top: 14px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <header class="masthead">
+            <div>
+                <p class="eyebrow">A pattern game</p>
+                <h1>Simon Says</h1>
+            </div>
+            <div class="rounds" aria-label="Game scores">
+                <div class="score">
+                    <span class="score-label">Level</span>
+                    <span class="score-value" id="level">0</span>
+                </div>
+                <div class="score">
+                    <span class="score-label">Best</span>
+                    <span class="score-value" id="best">0</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="game-layout" aria-label="Simon Says game">
+            <div class="board" id="board" aria-label="Color pad board">
+                <button class="pad" type="button" data-pad="0" aria-label="Coral pad, key 1" aria-disabled="true">
+                    <span class="pad-name" aria-hidden="true">Coral</span>
+                    <kbd aria-hidden="true">1</kbd>
+                </button>
+                <button class="pad" type="button" data-pad="1" aria-label="Gold pad, key 2" aria-disabled="true">
+                    <span class="pad-name" aria-hidden="true">Gold</span>
+                    <kbd aria-hidden="true">2</kbd>
+                </button>
+                <button class="pad" type="button" data-pad="2" aria-label="Teal pad, key 3" aria-disabled="true">
+                    <span class="pad-name" aria-hidden="true">Teal</span>
+                    <kbd aria-hidden="true">3</kbd>
+                </button>
+                <button class="pad" type="button" data-pad="3" aria-label="Blue pad, key 4" aria-disabled="true">
+                    <span class="pad-name" aria-hidden="true">Blue</span>
+                    <kbd aria-hidden="true">4</kbd>
+                </button>
+            </div>
+
+            <aside class="side-panel">
+                <p class="status" id="status" role="status" aria-live="polite">Ready when you are.</p>
+                <div class="action-row">
+                    <button class="action" id="start" type="button">Start game</button>
+                    <button class="action secondary" id="sound" type="button" aria-pressed="true">Sound on</button>
+                </div>
+                <p class="hint">Watch the lights, then repeat the pattern. Use the pads or keys 1–4.</p>
+            </aside>
+        </section>
+    </main>
+
+    <script>
+        const pads = Array.from(document.querySelectorAll('.pad'));
+        const board = document.querySelector('#board');
+        const levelDisplay = document.querySelector('#level');
+        const bestDisplay = document.querySelector('#best');
+        const statusDisplay = document.querySelector('#status');
+        const startButton = document.querySelector('#start');
+        const soundButton = document.querySelector('#sound');
+        const frequencies = [261.63, 329.63, 392, 523.25];
+        const bestKey = 'simonSaysBestLevel';
+        const game = {
+            sequence: [],
+            inputIndex: 0,
+            completedLevel: 0,
+            phase: 'idle',
+            run: 0,
+            soundEnabled: true,
+            audioContext: null
+        };
+
+        function readBest() {
+            try {
+                return Number(localStorage.getItem(bestKey)) || 0;
+            } catch {
+                return 0;
+            }
+        }
+
+        function saveBest(level) {
+            const best = Math.max(readBest(), level);
+            try {
+                localStorage.setItem(bestKey, String(best));
+            } catch {
+                // The current game remains playable if storage is unavailable.
+            }
+            bestDisplay.textContent = String(best);
+        }
+
+        function setStatus(message) {
+            statusDisplay.textContent = message;
+        }
+
+        function setPadsDisabled(disabled) {
+            pads.forEach(pad => pad.setAttribute('aria-disabled', String(disabled)));
+        }
+
+        function wait(milliseconds) {
+            return new Promise(resolve => window.setTimeout(resolve, milliseconds));
+        }
+
+        function prepareAudio() {
+            if (!game.soundEnabled || game.audioContext) return;
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) game.audioContext = new AudioContextClass();
+        }
+
+        function playTone(padIndex, duration = 190) {
+            if (!game.soundEnabled) return;
+            prepareAudio();
+            if (!game.audioContext) return;
+
+            const context = game.audioContext;
+            if (context.state === 'suspended') context.resume();
+
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            const now = context.currentTime;
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequencies[padIndex];
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.16, now + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration / 1000);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start(now);
+            oscillator.stop(now + duration / 1000);
+        }
+
+        async function showSequence(run) {
+            game.phase = 'showing';
+            game.inputIndex = 0;
+            setPadsDisabled(true);
+            levelDisplay.textContent = String(game.sequence.length);
+            setStatus('Watch the pattern.');
+            await wait(450);
+
+            for (const padIndex of game.sequence) {
+                if (run !== game.run || game.phase !== 'showing') return;
+                const pad = pads[padIndex];
+                pad.classList.add('is-lit');
+                playTone(padIndex);
+                await wait(260);
+                pad.classList.remove('is-lit');
+                await wait(150);
+            }
+
+            if (run !== game.run || game.phase !== 'showing') return;
+            game.phase = 'input';
+            setPadsDisabled(false);
+            setStatus('Your turn.');
+        }
+
+        async function beginGame() {
+            game.run++;
+            const run = game.run;
+            prepareAudio();
+            game.sequence = [];
+            game.inputIndex = 0;
+            game.completedLevel = 0;
+            game.phase = 'showing';
+            levelDisplay.textContent = '0';
+            startButton.textContent = 'Restart game';
+            setPadsDisabled(true);
+            setStatus('Get ready.');
+            await wait(350);
+            if (run !== game.run) return;
+            game.sequence.push(Math.floor(Math.random() * pads.length));
+            showSequence(run);
+        }
+
+        function finishGame() {
+            game.phase = 'over';
+            setPadsDisabled(true);
+            board.classList.remove('is-wrong');
+            void board.offsetWidth;
+            board.classList.add('is-wrong');
+            saveBest(game.completedLevel);
+            setStatus(game.completedLevel
+                ? `Pattern broken. You reached level ${game.completedLevel}.`
+                : 'Not quite. Ready for another try?');
+            startButton.textContent = 'Play again';
+        }
+
+        function playPad(padIndex) {
+            if (game.phase !== 'input') return;
+            const pad = pads[padIndex];
+            pad.classList.add('is-lit');
+            window.setTimeout(() => pad.classList.remove('is-lit'), 170);
+            playTone(padIndex, 150);
+
+            if (game.sequence[game.inputIndex] !== padIndex) {
+                finishGame();
+                return;
+            }
+
+            game.inputIndex++;
+            if (game.inputIndex !== game.sequence.length) return;
+
+            game.completedLevel = game.sequence.length;
+            saveBest(game.completedLevel);
+            game.phase = 'showing';
+            setPadsDisabled(true);
+            setStatus('Nice. Next pattern.');
+            const run = game.run;
+            window.setTimeout(() => {
+                if (run !== game.run || game.phase !== 'showing') return;
+                game.sequence.push(Math.floor(Math.random() * pads.length));
+                showSequence(run);
+            }, 650);
+        }
+
+        pads.forEach((pad, index) => {
+            pad.addEventListener('click', () => playPad(index));
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
+            const keyIndex = Number(event.key) - 1;
+            if (keyIndex >= 0 && keyIndex < pads.length) {
+                event.preventDefault();
+                playPad(keyIndex);
+            }
+        });
+
+        startButton.addEventListener('click', beginGame);
+
+        soundButton.addEventListener('click', () => {
+            game.soundEnabled = !game.soundEnabled;
+            soundButton.textContent = game.soundEnabled ? 'Sound on' : 'Sound off';
+            soundButton.setAttribute('aria-pressed', String(game.soundEnabled));
+            if (game.soundEnabled) prepareAudio();
+        });
+
+        bestDisplay.textContent = String(readBest());
+    </script>
+</body>
+</html>

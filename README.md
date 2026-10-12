@@ -1,40 +1,41 @@
-# Memory Game
+# Browser Games
 
-A responsive and accessible Memory (Concentration) card game built with HTML, CSS, and JavaScript.
+Two responsive, dependency-free games built with HTML, CSS, and vanilla JavaScript. Open either HTML file directly in a browser; no installation or build step is required.
 
-## Features
+## Memory Game
 
-- 4x4 and 6x6 grid options
-- Smooth card flip animations
-- Timer and moves counter
-- Star rating system
-- Local storage for best scores
-- Keyboard controls for accessibility
-- Responsive design for all devices
-- No external dependencies
+Match pairs of cards and try to finish in as few moves as possible.
 
-## How to Play
+- Choose a 4x4 or 6x6 board
+- Track moves, time, and star rating
+- Save best scores in browser local storage
+- Play with a mouse or keyboard
 
-1. Open `memory-game.html` in a web browser
-2. Click or use keyboard (Tab + Enter/Space) to flip cards
-3. Find matching pairs to win
-4. Try to complete the game with as few moves as possible
-5. Switch between 4x4 and 6x6 grids using the buttons
+Open `memory-game.html` to play. Use Tab to focus a card, then press Enter or Space to flip it.
 
-## Technical Details
+## Simon Says
 
-- Pure HTML, CSS, and JavaScript implementation
+Watch the sequence of colored pads and sounds, then repeat it. Each successful round adds another step.
+
+- Four color pads with synthesized tones
+- Use the mouse, touchscreen, or keys 1-4
+- Toggle sound on or off
+- Save your best level in browser local storage
+
+Open `simon-says.html` to play, then select **Start game**.
+
+## Run Locally
+
+Both games work by opening their HTML files directly. To serve the project locally instead, run this command from the repository folder:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/memory-game.html` or `http://localhost:8000/simon-says.html`.
+
+## Built With
+
+- HTML5, CSS, and vanilla JavaScript
+- Browser local storage for best scores
 - No external libraries or dependencies
-- Fully responsive design using CSS Grid
-- Accessible with ARIA attributes and keyboard controls
-- Local storage for persistent high scores
-
-## Development
-
-1. Clone the repository
-2. Open `memory-game.html` in a web browser
-3. Or serve using a local HTTP server:
-   ```bash
-   python3 -m http.server 8000
-   ```
-4. Visit `http://localhost:8000/memory-game.html`
